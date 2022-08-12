@@ -1,6 +1,7 @@
 #define WEBSOCKETS_LOGLEVEL     2
 #include <WiFiClientSecure.h>
 #include <WebSocketsServer_Generic.h>
+#include <ArduinoJson.h>
 #define WS_PORT 80
 
 
@@ -10,6 +11,7 @@ String mpu = "";             //mpu data
 String command = "";         // commands
 String channel;         //channel name received from payload
 String loc_com = "";
+DynamicJsonDocument doc(1024);
 
 int arr[10];
 
@@ -33,7 +35,7 @@ void webSocketEvent(const uint8_t& num, const WStype_t& type, uint8_t * payload,
     case WStype_DISCONNECTED:
       if (arr[(int)num] == 1)
       {
-//        Serial1.print("{COM:\"S\"}");
+        //        Serial1.print("{COM:\"S\"}");
       }
 
       break;
@@ -51,7 +53,7 @@ void webSocketEvent(const uint8_t& num, const WStype_t& type, uint8_t * payload,
         {
           arr[(int)num] = 1;
         }
-        else if (channel == "/SMPU" )
+        else if (channel == "/SOS" )
         {
           arr[(int)num] = 2;
         }
@@ -65,7 +67,6 @@ void webSocketEvent(const uint8_t& num, const WStype_t& type, uint8_t * payload,
     case WStype_TEXT:
       if (arr[(int)num] == 0)
       {
-
         mpu =  String((char*)payload);
         webSocket.sendTXT(2, mpu);
       }
@@ -73,8 +74,29 @@ void webSocketEvent(const uint8_t& num, const WStype_t& type, uint8_t * payload,
       if ( arr[(int)num] == 1)
       {
         command =  String((char*)payload);
-        command =  command + String('*');
         Serial.println(command);
+
+        deserializeJson(doc, command);
+        const char* sensor = doc["COM"];
+        Serial.println(sensor);
+        switch (sensor[0])
+        {
+          case 'B':
+            Serial.println("Hi from back!");
+            break;
+          case 'F':
+            Serial.println("Hi from Front!");
+            break;
+          case 'R':
+            Serial.println("Hi from right!");
+            break;
+          case 'L':
+            Serial.println("Hi from Left!");
+            break;
+          default:
+            Serial.println("Hi from def!");
+            break;
+        }
       }
 
       if ( arr[(int)num] == 3)
@@ -100,7 +122,7 @@ void setup()
   digitalWrite(2 , LOW);
   Serial.begin(38400);
   Serial.print(F("Connecting Wifi"));
-  WiFi.begin("JioFi3_064B18", "kpe2htnkkx");
+  WiFi.begin("R1-Server", "R1-Server");
   while (WiFi.status() != WL_CONNECTED) {
     Serial.print(F("."));
     delay(500);
@@ -119,7 +141,7 @@ void loop()
     digitalWrite(2 , LOW);
     digitalWrite(12 , LOW);
 
-    WiFi.begin("JioFi3_064B18", "kpe2htnkkx");
+    WiFi.begin("R1-Server", "R1-Server");
     while (WiFi.status() != WL_CONNECTED) {
       Serial.print(F("."));
       delay(200);
