@@ -2,6 +2,7 @@
 #include <WiFiClientSecure.h>
 #include <WebSocketsServer_Generic.h>
 #include <ArduinoJson.h>
+#include"servo_loco.h"
 #define WS_PORT 80
 
 
@@ -86,6 +87,7 @@ void webSocketEvent(const uint8_t& num, const WStype_t& type, uint8_t * payload,
             break;
           case 'F':
             Serial.println("Hi from Front!");
+            locoLoop();
             break;
           case 'R':
             Serial.println("Hi from right!");
@@ -131,7 +133,7 @@ void setup()
   webSocket.onEvent(webSocketEvent);
   Serial.print(F("WebSocket IP address: "));
   Serial.println(WiFi.localIP());
-
+  servoSetup();
 }
 
 void loop()
